@@ -1,0 +1,30 @@
+---
+description: Use shadcn/ui for all UI elements; init and add components via CLI when missing
+alwaysApply: true
+---
+
+# shadcn/ui
+
+This project uses [shadcn/ui](https://ui.shadcn.com) for **all** UI elements. Do not build custom buttons, inputs, dialogs, cards, or other primitives when a shadcn component exists.
+
+Config lives in [components.json](mdc:components.json). Installed components belong in `@/components/ui`. Shared helpers live in [lib/utils.ts](mdc:lib/utils.ts).
+
+## Setup
+
+If shadcn is not initialized (no `components.json`), run:
+
+```bash
+npx shadcn@latest init
+```
+
+If a needed component is not installed (no matching file under `components/ui`), add it with the CLI. Example for Button:
+
+```bash
+npx shadcn@latest add button
+```
+
+Use the same pattern for other components (`card`, `dialog`, `input`, `label`, etc.).
+
+## Usage
+
+Import from `@/components/ui/<component>` after adding. Do not copy-paste component source by hand or invent parallel UI kits.

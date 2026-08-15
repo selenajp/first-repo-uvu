@@ -1,0 +1,57 @@
+---
+alwaysApply: true
+---
+# Database Interactions with Drizzle ORM
+
+This project uses [Drizzle ORM](https://orm.drizzle.team/) for all database interactions. **Never** use raw SQL queries or other database libraries.
+
+## Schema and Database Instance
+
+- Database schema is defined in [db/schema.ts](mdc:db/schema.ts)
+- Database instance is exported from [db/index.ts](mdc:db/index.ts) as `db`
+- Backend: Neon serverless PostgreSQL
+
+## Required Patterns
+
+### Import the database instance and schema:
+
+```typescript
+import { db } from '@/db';
+import { decks, cards } from '@/db/schema';
+```
+
+### Use Drizzle query methods:
+
+```typescript
+// Select
+const allDecks = await db.select().from(decks);
+const userDecks = await db.select().from(decks).where(eq(decks.userId, userId));
+
+// Insert
+await db.insert(decks).values({ userId, name, description });
+
+// Update
+await db.update(decks).set({ name: newName }).where(eq(decks.id, deckId));
+
+// Delete
+await db.delete(cards).where(eq(cards.deckId, deckId));
+```
+
+### Leverage Drizzle's type safety:
+
+All queries automatically inherit TypeScript types from the schema. Never cast or override these types unless absolutely necessary.
+
+## What NOT to Do
+
+- ❌ Do not write raw SQL queries
+- ❌ Do not use other ORMs (Prisma, TypeORM, etc.)
+- ❌ Do not bypass the schema definitions
+- ❌ Do not use string-based column references
+
+## Schema Updates
+
+When adding or modifying tables:
+
+1. Update [db/schema.ts](mdc:db/schema.ts)
+2. Run `npm run db:generate` to create migrations
+3. Run `npm run db:migrate` to apply migrations

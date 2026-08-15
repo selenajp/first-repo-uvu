@@ -1,0 +1,52 @@
+---
+description: Fetch in Server Components; mutate via Server Actions with Zod-typed inputs (never FormData)
+alwaysApply: true
+---
+
+# Data Access, Mutations & Validation
+
+- **Reads** happen only in Server Components. Query [db/index.ts](mdc:db/index.ts) there; never fetch DB data from Client Components or Route Handlers.
+- **Inserts, updates, and deletes** happen only in Server Actions (`"use server"`). Never mutate from Client Components, Route Handlers, or Server Components.
+- **Validate** all untrusted input with [Zod](https://zod.dev). Every Server Action argument is a typed object (`z.infer<typeof schema>`). **Never** type an action argument as `FormData`.
+
+```typescript
+// ✅ Server Component — read
+import { db } from "@/db";
+import { decks } from "@/db/schema";
+
+export default async function DecksPage() {
+  const userDecks = await db.select().from(decks).where(eq(decks.userId, userId));
+  return /* render userDecks */;
+}
+```
+
+```typescript
+// ✅ Server Action — mutate with Zod + typed input
+"use server";
+
+import { z } from "zod";
+
+const createDeckSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+});
+
+type CreateDeckInput = z.infer<typeof createDeckSchema>;
+
+export async function createDeck(input: CreateDeckInput) {
+  const data = createDeckSchema.parse(input);
+  await db.insert(decks).values({ userId, name: data.name, description: data.description });
+}
+```
+
+```typescript
+// ❌ never read from a Client Component or Route Handler
+"use client";
+useEffect(() => { void fetch("/api/decks"); }, []);
+
+// ❌ never mutate outside a Server Action
+await db.insert(decks).values({ userId, name }); // in a page or route
+
+// ❌ never accept FormData as the action type
+export async function createDeck(formData: FormData) {}
+```
